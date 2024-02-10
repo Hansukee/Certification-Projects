@@ -1,35 +1,31 @@
 const express = require('express');
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Welcome to the API!');
+  res.send('Welcome to the timestamp microservice!');
 });
 
-app.get('/api', (req, res) => {
-  const currentTime = new Date();
-  res.json({
-    unix: currentTime.getTime(),
-    utc: currentTime.toUTCString(),
-  });
-});
+app.post('/timestamp', (req, res) => {
+  const dateString = req.body.date;
 
-app.get('/api/:date', (req, res) => {
-  const dateString = req.params.date;
+  if (!dateString) {
+    return res.status(400).json({ error: 'No date provided' });
+  }
+
   const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    res.json({ error: 'Invalid Date' });
-  } else {
-    res.json({
-      unix: date.getTime(),
-      utc: date.toUTCString(),
-    });
+    return res.status(400).json({ error: 'Invalid date format' });
   }
+
+  const timestamp = Math.floor(date.getTime() / 1000);
+
+  res.json({ unix: timestamp, utc: date.toUTCString() });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Timestamp microservice listening at http://localhost:${port}`);
 });
