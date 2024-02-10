@@ -1,24 +1,34 @@
 const express = require('express');
-const app = express();
+const cors = require('cors');
 
-app.get('/api/:date?', (req, res) => {
-  const date = req.params.date;
+var app = express();
 
-  if (!date) {
-    const currentTime = new Date();
-    res.json({ unix: currentTime.getTime(), utc: currentTime.toUTCString() });
+app.use(cors({ optionsSuccessStatus: 200 }));
+
+app.use(express.static('public'));
+
+app.get("/", function (req, res) {
+  res.sendFile(__dirname + '/views/index.html');
+});
+
+app.get("/api/hello", function (req, res) {
+  res.json({ greeting: 'hello API' });
+});
+
+app.get("/api/:date?", function (req, res) {
+  const dateParam = req.params.date;
+  const date = dateParam ? new Date(dateParam) : new Date();
+
+  if (isNaN(date.getTime())) {
+    res.json({ error: "Invalid Date" });
   } else {
-    let parsedDate;
-    try {
-      parsedDate = new Date(Number(date));
-    } catch (err) {
-      res.json({ error: 'Invalid Date' });
-      return;
-    }
-    res.json({ unix: parsedDate.getTime(), utc: parsedDate.toUTCString() });
+    res.json({
+      unix: date.getTime(),
+      utc: date.toUTCString()
+    });
   }
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+var listener = app.listen(process.env.PORT, function () {
+  console.log('Your app is listening on port ' + listener.address().port);
 });
